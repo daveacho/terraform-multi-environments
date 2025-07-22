@@ -1,143 +1,143 @@
-# name: Terraform multi-environment deployments
+name: Terraform multi-environment deployments
 
-# on:
-#   # push:
-#   #   branches:
-#   #     - main
-#   pull_request:
-#     branches:
-#       - main
-#   workflow_dispatch:
-#     inputs:
-#       action:
-#         description: 'Terraform action (apply or destroy)'
-#         required: true
-#         default: 'apply'
-#       environment:
-#         description: 'Environment to deploy (dev, stage, prod)'
-#         required: true
-#         default: 'dev'
+on:
+  # push:
+  #   branches:
+  #     - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action (apply or destroy)'
+        required: true
+        default: 'apply'
+      environment:
+        description: 'Environment to deploy (dev, stage, prod)'
+        required: true
+        default: 'dev'
 
-# jobs:
-#   terraform:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       id-token: write  # Required for OIDC
-#       contents: read   # Required for actions/checkout
-#       issues: write    # Required to create issue comments
-#       pull-requests: write  # Required to interact with pull requests
-#     strategy:
-#       matrix:
-#         environment: [dev, stage, prod]
-#       fail-fast: false
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read   # Required for actions/checkout
+      issues: write    # Required to create issue comments
+      pull-requests: write  # Required to interact with pull requests
+    strategy:
+      matrix:
+        environment: [dev, stage, prod]
+      fail-fast: false
 
-    # env:
-    #   TF_VAR_region: eu-west-2
-    #   TF_VAR_source_token: "myToken"
-    #   TF_VAR_projectName: "revolution"
-    #   TF_VAR_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || matrix.environment }}
-    #   TF_VAR_influxdb_url: "https://influxdb"
-    #   TF_VAR_organisation: "duma"
-    #   TF_VAR_destination_influxdb_url: "https://localhost:8086"
-    #   TF_VAR_destination_org: "my-new-org"
-    #   TF_VAR_destination_token: "my-token"
+    env:
+      TF_VAR_region: eu-west-2
+      TF_VAR_source_token: "myToken"
+      TF_VAR_projectName: "revolution"
+      TF_VAR_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || matrix.environment }}
+      TF_VAR_influxdb_url: "https://influxdb"
+      TF_VAR_organisation: "duma"
+      TF_VAR_destination_influxdb_url: "https://localhost:8086"
+      TF_VAR_destination_org: "my-new-org"
+      TF_VAR_destination_token: "my-token"
 
-#     steps:
-#       # Checkout the repository
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       # Configure AWS credentials via OIDC
-#       - name: Configure AWS Credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         env:
-#           AWS_ROLE_ARN: arn:aws:iam::339713055209:role/test-oidc-role
-#           AWS_REGION: eu-west-2
-#         with:
-#           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-#           aws-region: ${{ env.AWS_REGION }}
-#           role-session-name: GitHubActionsTerraform
+      # Configure AWS credentials via OIDC
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        env:
+          AWS_ROLE_ARN: arn:aws:iam::339713055209:role/test-oidc-role
+          AWS_REGION: eu-west-2
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActionsTerraform
 
-#       # Set up Terraform
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: "1.12.2"
-#           terraform_wrapper: false
+      # Set up Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+          terraform_wrapper: false
 
-#       # Run terraform fmt -check
-#       - name: Terraform Format
-#         id: fmt
-#         run: terraform fmt
-#         working-directory: terraform/${{ matrix.environment }}
-#         continue-on-error: false
+      # Run terraform fmt -check
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt
+        working-directory: terraform/${{ matrix.environment }}
+        continue-on-error: false
 
-#       # Initialize Terraform
-#       - name: Terraform Init
-#         id: init
-#         run: terraform init
-#         working-directory: terraform/${{ matrix.environment }}
+      # Initialize Terraform
+      - name: Terraform Init
+        id: init
+        run: terraform init
+        working-directory: terraform/${{ matrix.environment }}
 
-#       # Run terraform validate
-#       - name: Terraform Validate
-#         id: validate
-#         run: terraform validate -no-color
-#         working-directory: terraform/${{ matrix.environment }}
+      # Run terraform validate
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: terraform/${{ matrix.environment }}
 
-#       # Generate Terraform plan and capture output
-#       - name: Terraform Plan
-#         id: plan
-#         run: |
-#           if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
-#             terraform plan -destroy -out=tfplan -no-color > plan-output.txt
-#           else
-#             terraform plan -out=tfplan -no-color > plan-output.txt
-#           fi
-#         working-directory: terraform/${{ matrix.environment }}
-#         continue-on-error: true
+      # Generate Terraform plan and capture output
+      - name: Terraform Plan
+        id: plan
+        run: |
+          if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
+            terraform plan -destroy -out=tfplan -no-color > plan-output.txt
+          else
+            terraform plan -out=tfplan -no-color > plan-output.txt
+          fi
+        working-directory: terraform/${{ matrix.environment }}
+        continue-on-error: true
 
-#       # Add a comment to pull requests with plan results
-#       - name: Add Plan Comment
-#         if: github.event_name == 'pull_request'
-#         uses: actions/github-script@v7
-#         with:
-#           github-token: ${{ secrets.GITHUB_TOKEN }}
-#           script: |
-#             const fs = require('fs');
-#             const planOutput = fs.readFileSync('terraform/${{ matrix.environment }}/plan-output.txt', 'utf8');
-#             const output = `#### Terraform Format and Style 🖌 (${{ matrix.environment }}) \`${{ steps.fmt.outcome }}\`
-#             #### Terraform Initialization ⚙️ (${{ matrix.environment }}) \`${{ steps.init.outcome }}\`
-#             #### Terraform Validation 🤖 (${{ matrix.environment }}) \`${{ steps.validate.outcome }}\`
-#             #### Terraform Plan 📖 (${{ matrix.environment }}) \`${{ steps.plan.outcome }}\`
+      # Add a comment to pull requests with plan results
+      - name: Add Plan Comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('terraform/${{ matrix.environment }}/plan-output.txt', 'utf8');
+            const output = `#### Terraform Format and Style 🖌 (${{ matrix.environment }}) \`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️ (${{ matrix.environment }}) \`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖 (${{ matrix.environment }}) \`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖 (${{ matrix.environment }}) \`${{ steps.plan.outcome }}\`
 
-#             <details><summary>Show Plan (${{ matrix.environment }})</summary>
+            <details><summary>Show Plan (${{ matrix.environment }})</summary>
 
-#             \`\`\`terraform\n${planOutput}\n\`\`\`
+            \`\`\`terraform\n${planOutput}\n\`\`\`
 
-#             </details>
+            </details>
 
-#             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`, Environment: \`${{ matrix.environment }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`, Environment: \`${{ matrix.environment }}\`*`;
 
-#             await github.rest.issues.createComment({
-#               issue_number: context.issue.number,
-#               owner: context.repo.owner,
-#               repo: context.repo.repo,
-#               body: output
-#             });
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
 
-#       # Apply or Destroy (only for push or workflow_dispatch, and only for selected environment)
-#       - name: Terraform Apply or Destroy
-#         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.environment == github.event.inputs.environment
-#         run: |
-#           if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
-#             terraform destroy -auto-approve
-#           elif [ "${{ github.event.inputs.action || 'apply' }}" == "apply" ]; then
-#             terraform apply -auto-approve tfplan
-#           else
-#             echo "Destroy is not allowed in prod environment"
-#             exit 1
-#           fi
-#         working-directory: terraform/${{ matrix.environment }}
+      # Apply or Destroy (only for push or workflow_dispatch, and only for selected environment)
+      - name: Terraform Apply or Destroy
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.environment == github.event.inputs.environment
+        run: |
+          if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
+            terraform destroy -auto-approve
+          elif [ "${{ github.event.inputs.action || 'apply' }}" == "apply" ]; then
+            terraform apply -auto-approve tfplan
+          else
+            echo "Destroy is not allowed in prod environment"
+            exit 1
+          fi
+        working-directory: terraform/${{ matrix.environment }}
 
 
 # name: Terraform Apply and Destroy
@@ -305,142 +305,145 @@
 
 ####################################################################################
 
-name: Terraform multi-environment deployments
+# name: Terraform multi-environment deployments
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Terraform action (apply or destroy)'
-        required: true
-        default: 'apply'
-        type: choice
-        options:
-          - apply
-          - destroy
-      environment:
-        description: 'Environment to deploy (dev, stage, prod)'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - stage
-          - prod
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+#   workflow_dispatch:
+#     inputs:
+#       action:
+#         description: 'Terraform action (apply or destroy)'
+#         required: true
+#         default: 'apply'
+#         type: choice
+#         options:
+#           - apply
+#           - destroy
+#       environment:
+#         description: 'Environment to deploy (dev, stage, prod)'
+#         required: true
+#         default: 'dev'
+#         type: choice
+#         options:
+#           - dev
+#           - stage
+#           - prod
 
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      issues: write
-      pull-requests: write
-    strategy:
-      matrix:
-        environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["' + github.event.inputs.environment + '"]') || fromJSON('["dev", "stage", "prod"]') }}
-      fail-fast: false
+# jobs:
+#   terraform:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       id-token: write
+#       contents: read
+#       issues: write
+#       pull-requests: write
+#     strategy:
+#       matrix:
+#         environment: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["' + github.event.inputs.environment + '"]') || fromJSON('["dev", "stage", "prod"]') }}
+#       fail-fast: false
 
-    env:
-      TF_VAR_region: eu-west-2
-      TF_VAR_projectName: "revolution"
-      TF_VAR_environment: ${{ matrix.environment }}
-      TF_VAR_influxdb_url: "https://influxdb-ts"
-      TF_VAR_organisation: "duma"
-      TF_VAR_destination_influxdb_url: ${{ matrix.environment == 'dev' && 'https://dev.localhost:8086' || matrix.environment == 'stage' && 'https://stage.localhost:8086' || 'https://prod.localhost:8086' }}
-      TF_VAR_destination_org: ${{ matrix.environment == 'dev' && 'dev-org' || matrix.environment == 'stage' && 'stage-org' || 'prod-org' }}
-      TF_VAR_destination_token: ${{ secrets[format('DESTINATION_TOKEN_%s', matrix.environment)] }}
+#     env:
+#       TF_VAR_region: eu-west-2
+#       TF_VAR_projectName: "revolution"
+#       TF_VAR_environment: ${{ matrix.environment }}
+#       TF_VAR_influxdb_url: "https://influxdb-ts"
+#       TF_VAR_organisation: "duma"
+#       TF_VAR_destination_influxdb_url: ${{ matrix.environment == 'dev' && 'https://dev.localhost:8086' || matrix.environment == 'stage' && 'https://stage.localhost:8086' || 'https://prod.localhost:8086' }}
+#       TF_VAR_destination_org: ${{ matrix.environment == 'dev' && 'dev-org' || matrix.environment == 'stage' && 'stage-org' || 'prod-org' }}
+#       TF_VAR_destination_token: ${{ secrets[format('DESTINATION_TOKEN_%s', matrix.environment)] }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        env:
-          AWS_ROLE_ARN: arn:aws:iam::339713055209:role/test-oidc-role
-          AWS_REGION: eu-west-2
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GitHubActionsTerraform
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         env:
+#           AWS_ROLE_ARN: arn:aws:iam::339713055209:role/test-oidc-role
+#           AWS_REGION: eu-west-2
+#         with:
+#           role-to-assume: ${{ env.AWS_ROLE_ARN }}
+#           aws-region: ${{ env.AWS_REGION }}
+#           role-session-name: GitHubActionsTerraform
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.12.2"
-          terraform_wrapper: false
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: "1.12.2"
+#           terraform_wrapper: false
 
-      - name: Terraform Format
-        id: fmt
-        run: terraform fmt
-        working-directory: terraform/${{ matrix.environment }}
-        continue-on-error: false
+#       - name: Terraform Format
+#         id: fmt
+#         run: terraform fmt
+#         working-directory: terraform/${{ matrix.environment }}
+#         continue-on-error: false
 
-      - name: Terraform Init
-        id: init
-        run: terraform init
-        working-directory: terraform/${{ matrix.environment }}
+#       - name: Terraform Init
+#         id: init
+#         run: terraform init
+#         working-directory: terraform/${{ matrix.environment }}
 
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-        working-directory: terraform/${{ matrix.environment }}
+#       - name: Terraform Validate
+#         id: validate
+#         run: terraform validate -no-color
+#         working-directory: terraform/${{ matrix.environment }}
 
-      - name: Terraform Plan
-        id: plan
-        run: |
-          if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
-            terraform plan -destroy -out=tfplan -no-color -lock-timeout=30s > plan-output.txt
-          else
-            terraform plan -out=tfplan -no-color -lock-timeout=30s > plan-output.txt
-          fi
-        working-directory: terraform/${{ matrix.environment }}
-        continue-on-error: true
+#       - name: Terraform Plan
+#         id: plan
+#         run: |
+#           if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
+#             terraform plan -destroy -out=tfplan -no-color -lock-timeout=30s > plan-output.txt
+#           else
+#             terraform plan -out=tfplan -no-color -lock-timeout=30s > plan-output.txt
+#           fi
+#         working-directory: terraform/${{ matrix.environment }}
+#         continue-on-error: true
 
-      - name: Add Plan Comment
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const planOutput = fs.readFileSync('terraform/${{ matrix.environment }}/plan-output.txt', 'utf8');
-            const output = `#### Terraform Format and Style 🖌 (${{ matrix.environment }}) \`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️ (${{ matrix.environment }}) \`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖 (${{ matrix.environment }}) \`${{ steps.validate.outcome }}\`
-            #### Terraform Plan 📖 (${{ matrix.environment }}) \`${{ steps.plan.outcome }}\`
+#       - name: Add Plan Comment
+#         if: github.event_name == 'pull_request'
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.GITHUB_TOKEN }}
+#           script: |
+#             const fs = require('fs');
+#             const planOutput = fs.readFileSync('terraform/${{ matrix.environment }}/plan-output.txt', 'utf8');
+#             const output = `#### Terraform Format and Style 🖌 (${{ matrix.environment }}) \`${{ steps.fmt.outcome }}\`
+#             #### Terraform Initialization ⚙️ (${{ matrix.environment }}) \`${{ steps.init.outcome }}\`
+#             #### Terraform Validation 🤖 (${{ matrix.environment }}) \`${{ steps.validate.outcome }}\`
+#             #### Terraform Plan 📖 (${{ matrix.environment }}) \`${{ steps.plan.outcome }}\`
 
-            <details><summary>Show Plan (${{ matrix.environment }})</summary>
+#             <details><summary>Show Plan (${{ matrix.environment }})</summary>
 
-            \`\`\`terraform\n${planOutput}\n\`\`\`
+#             \`\`\`terraform\n${planOutput}\n\`\`\`
 
-            </details>
+#             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`, Environment: \`${{ matrix.environment }}\`*`;
+#             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Workflow: \`${{ github.workflow }}\`, Environment: \`${{ matrix.environment }}\`*`;
 
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
+#             await github.rest.issues.createComment({
+#               issue_number: context.issue.number,
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               body: output
+#             });
 
-      - name: Terraform Apply or Destroy
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: |
-          if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
-            terraform destroy -auto-approve -lock-timeout=30s
-          elif [ "${{ github.event.inputs.action || 'apply' }}" == "apply" ]; then
-            terraform apply -auto-approve -lock-timeout=30s tfplan
-          else
-            echo "Destroy is not allowed in prod environment"
-            exit 1
-          fi
-        working-directory: terraform/${{ matrix.environment }}
+#       - name: Terraform Apply or Destroy
+#         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+#         run: |
+#           if [ "${{ github.event.inputs.action || 'apply' }}" == "destroy" ] && [ "${{ matrix.environment }}" != "prod" ]; then
+#             terraform destroy -auto-approve -lock-timeout=30s
+#           elif [ "${{ github.event.inputs.action || 'apply' }}" == "apply" ]; then
+#             terraform apply -auto-approve -lock-timeout=30s tfplan
+#           else
+#             echo "Destroy is not allowed in prod environment"
+#             exit 1
+#           fi
+#         working-directory: terraform/${{ matrix.environment }}
+
+# #         Invalid workflow file: .github/workflows/terraform.yml#L347
+# # The workflow is not valid. .github/workflows/terraform.yml (Line: 347, Col: 22): Unexpected symbol: '+'. Located at position 59 within expression: github.event_name == 'workflow_dispatch' && fromJSON('["' + github.event.inputs.environment + '"]') || fromJSON('["dev", "stage", "prod"]') .github/workflows/terraform.yml (Line: 347, Col: 22): Unexpected value '${{ github.event_name == 'workflow_dispatch' && fromJSON('["' + github.event.inputs.environment + '"]') || fromJSON('["dev", "stage", "prod"]') }}'
