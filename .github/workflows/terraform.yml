@@ -189,8 +189,8 @@ jobs:
           AWS_ROLE_ARN: arn:aws:iam::339713055209:role/test-oidc-role
           AWS_REGION: eu-west-2
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActionsTerraform
 
       # Set up Terraform
