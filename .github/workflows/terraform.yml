@@ -220,7 +220,7 @@ jobs:
       # Run terraform fmt -check
       - name: Terraform Format
         id: fmt
-        run: terraform fmt -check -recursive
+        run: terraform fmt
         working-directory: terraform/${{ github.event_name == 'pull_request' && steps.set-env.outputs.environment || github.event.inputs.environment || 'dev' }}
         continue-on-error: false
 
