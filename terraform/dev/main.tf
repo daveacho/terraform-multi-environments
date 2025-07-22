@@ -46,7 +46,7 @@
 # }
 
 module "secret_manager" {
-  source            = "./modules/secret_manager"
+  source            = "../../modules/secret_manager"
   projectName       = var.projectName
   environment       = var.environment
   source_token      = var.source_token
