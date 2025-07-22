@@ -33,11 +33,11 @@ jobs:
 
     env:
       TF_VAR_region: eu-west-2
-      TF_VAR_source_token: "HJbPgvyth9kTOLZ_T86hy1InoIjWhvgWR4d64K1BFfvp9b6LkGTLpHlIiMelOOytGExsN7omNwLjx-YBETHOpQ=="
+      TF_VAR_source_token: "myToken"
       TF_VAR_projectName: "revolution"
-      TF_VAR_environment: "staging"
-      TF_VAR_influxdb_url: "https://influxdb-ts-l3jaq2hcltbpnz.us-east-2.timestream-influxdb.amazonaws.com:8086"
-      TF_VAR_organisation: "dumarey"
+      TF_VAR_environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || matrix.environment }}
+      TF_VAR_influxdb_url: "https://influxdb"
+      TF_VAR_organisation: "duma"
       TF_VAR_destination_influxdb_url: "https://localhost:8086"
       TF_VAR_destination_org: "my-new-org"
       TF_VAR_destination_token: "my-token"
