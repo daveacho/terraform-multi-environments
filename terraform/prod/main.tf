@@ -1,5 +1,5 @@
 module "lambdas" {
-  source                         = "./modules/lambdas"
+  source                         = "../../modules/lambdas"
   projectName                    = var.projectName
   environment                    = var.environment
   influxdb_url                   = var.influxdb_url
@@ -15,7 +15,7 @@ module "lambdas" {
 }
 
 module "cloudwatch_event" {
-  source                                       = "./modules/cloudwatch_events"
+  source                                       = "../../modules/cloudwatch_events"
   projectName                                  = var.projectName
   environment                                  = var.environment
   influxdb_monthly_backup_lambda_function_arn  = module.lambdas.influxdb_monthly_backup_lambda_function_arn
@@ -29,7 +29,7 @@ module "cloudwatch_event" {
 
 
 module "cloudwatch-sns" {
-  source                                       = "./modules/cloudwatch-sns"
+  source                                       = "../../modules/cloudwatch-sns"
   projectName                                  = var.projectName
   environment                                  = var.environment
   influxdb_daily_backup_lambda_function_name   = module.lambdas.influxdb_daily_backup_lambda_function_name
@@ -39,7 +39,7 @@ module "cloudwatch-sns" {
 
 
 module "s3" {
-  source                    = "./modules/s3"
+  source                    = "../../modules/s3"
   projectName               = var.projectName
   environment               = var.environment
   lambda_execution_role_arn = module.lambdas.lambda_execution_role_arn
