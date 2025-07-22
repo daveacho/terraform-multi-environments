@@ -1,0 +1,11 @@
+variable "projectName" {}
+variable "environment" {}
+variable "influxdb_url" {}
+variable "organisation_name" {}
+variable "secret_manager_source_arn" {}
+variable "secret_manager_destination_arn" {}
+variable "destination_influxdb_url" {}
+variable "destination_org" {}
+variable "destination_token" {}
+variable "s3_bucket_name" {}
+variable "s3_bucket_arn" {}
